@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "main.py", line 11, in <module>
+    from models.models import EncoderRNN
+  File "/home/zhangyidan/20200209/models/models.py", line 133, in <module>
+    class image_encoder(nn.Module):
+KeyboardInterrupt

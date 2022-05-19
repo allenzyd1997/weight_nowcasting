@@ -1,0 +1,45 @@
+BEGIN TRAIN
+layer  0 input dim  128  hidden dim  128
+layer  0 input dim  256  hidden dim  256
+layer  0 input dim  256  hidden dim  128
+layer  0 input dim  256  hidden dim  256
+layer  0 input dim  128  hidden dim  128
+layer  0 input dim  256  hidden dim  256
+encoder  19077217
+BEGIN TRAIN
+layer  0 input dim  128  hidden dim  128
+layer  0 input dim  256  hidden dim  256
+layer  0 input dim  256  hidden dim  128
+layer  0 input dim  256  hidden dim  256
+layer  0 input dim  128  hidden dim  128
+layer  0 input dim  256  hidden dim  256
+encoder  19077217
+epoch  0  loss  268041073.52500004  epoch time  659.5328290462494
+epoch  0  loss  171423751.98749998  epoch time  678.7587821483612
+epoch  0  loss  164385794.2000001  epoch time  666.289470911026
+epoch  0  loss  165645310.10000008  epoch time  672.3376486301422
+epoch  0  loss  157875775.9624999  epoch time  673.9935083389282
+eval mse  11257.050671386718  eval mae  47275.11978515625  eval ssim  0.7170874785082181  eval bce  48556.60521875003
+epoch  0  loss  144069762.9999999  epoch time  1207.0270550251007
+epoch  0  loss  142033822.12499988  epoch time  680.8370923995972
+epoch  0  loss  145916965.79999995  epoch time  709.9694278240204
+epoch  0  loss  142521280.51250002  epoch time  688.3738923072815
+epoch  1  loss  141189901.77499998  epoch time  699.818911075592
+eval mse  8517.365061035156  eval mae  36810.8494921875  eval ssim  0.7513763301921914  eval bce  43024.673960937514
+epoch  1  loss  139789173.51250017  epoch time  1220.2406215667725
+epoch  1  loss  139854664.5250001  epoch time  700.8094272613525
+epoch  1  loss  140651257.87499988  epoch time  722.4220979213715
+epoch  1  loss  148685615.0375  epoch time  719.5423872470856
+epoch  1  loss  140523899.33749992  epoch time  717.5646395683289
+eval mse  11463.017885742187  eval mae  40747.295166015625  eval ssim  0.7779446824820808  eval bce  46602.65071093751
+epoch  1  loss  136447224.4875  epoch time  1247.6550452709198
+epoch  1  loss  135027044.2499999  epoch time  706.5474178791046
+epoch  1  loss  134824884.48750004  epoch time  720.1940503120422
+epoch  1  loss  135730587.01249996  epoch time  724.2876517772675
+epoch  2  loss  131483674.9  epoch time  714.294929265976
+eval mse  11332.158092041016  eval mae  44541.51114257812  eval ssim  0.7503346572190184  eval bce  47447.46172656251
+epoch  2  loss  135223213.80000007  epoch time  1185.2578299045563
+epoch  2  loss  138999410.3875  epoch time  696.6122450828552
+epoch  2  loss  135942209.7625  epoch time  680.0305016040802
+epoch  2  loss  137472473.04999995  epoch time  687.501368522644
+epoch  2  loss  134952893.04999998  epoch time  697.0723030567169
