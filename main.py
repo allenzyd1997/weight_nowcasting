@@ -18,7 +18,7 @@ import sys
 from torch.nn.parallel import DistributedDataParallel as DDP
 devices_list = [i for i in range(torch.cuda.device_count())]
 
-#os.environ["CUDA_VISIBLE_DEVICES"] = '2,5,6,7'
+# os.environ["CUDA_VISIBLE_DEVICES"] = '2,5,6,7'
 
 
 parser = argparse.ArgumentParser()
@@ -119,7 +119,7 @@ def train_on_batch(input_tensor, target_tensor, mask, encoder, encoder_optimizer
     target_length = target_tensor.size(1)
     loss = 0.0
     for ei in range(input_length - 1):
-        target = input_tensor[:, ei, :, :, :]
+        target = input_tensor[:, ei, :, :, :].contiguous()
         output_image = encoder(target)
         weight  = get_weight_symbol(input_tensor[:, ei + 1, :, :, :])
         # loss += criterion(output_image, input_tensor[:, ei + 1, :, :, :])
@@ -318,3 +318,5 @@ if args.checkpoint_path != '':
 else:
     plot_losses = trainIters(encoder, args.n_epochs, print_every=args.print_every, eval_every=args.eval_every)
     print(plot_losses)
+
+    
