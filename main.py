@@ -1,6 +1,6 @@
 import numpy as np
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = '2,5,6,7'
+import torch.distributed as dist
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,24 +14,22 @@ from models.models import EncoderRNN
 # from data.moving_mnist import MovingMNIST
 import argparse
 import cv2
-
 import sys
-
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# this is a list of integer showing the sequence of the available gpu.
+from torch.nn.parallel import DistributedDataParallel as DDP
 devices_list = [i for i in range(torch.cuda.device_count())]
 
-parser = argparse.ArgumentParser()
+#os.environ["CUDA_VISIBLE_DEVICES"] = '2,5,6,7'
 
-parser.add_argument('--batch_size', type=int, default=2, help='batch_size')
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--local_rank", type=int, default=0)
+parser.add_argument('--batch_size', type=int, default=1, help='batch_size')
 parser.add_argument('--lr', type=float, default=0.0005, help='learning_rate')
 parser.add_argument('--n_epochs', type=int, default=20, help='nb of epochs')
 parser.add_argument('--print_every', type=int, default=1, help='')
 parser.add_argument('--eval_every', type=int, default=1, help='')
 parser.add_argument('--save_dir', type=str, default='checkpoints')
 parser.add_argument('--gen_frm_dir', type=str, default='results')
-
 parser.add_argument('--checkpoint_path', type=str, default='', help='folder for checkpoint')
 parser.add_argument('--train_data_paths', type=str, default='/data1/shuliang/Radar_900/train/')
 # parser.add_argument('--train_data_paths', type=str, default='/data4/shuliang/Dataset/Radar_900/train')
@@ -50,6 +48,10 @@ parser.add_argument('--img_width', type=int, default=896)
 parser.add_argument('--img_channel', type=int, default=1)
 
 args = parser.parse_args()
+
+args.device = torch.cuda.device('cuda:'+str(args.local_rank))
+dist.init_process_group(backend='nccl')
+torch.cuda.set_device('cuda:'+str(args.local_rank))
 
 train_Datase = TrainDataset(args.train_data_paths)
 train_loader = DataLoader(dataset=train_Datase, batch_size=args.batch_size, shuffle=True,
@@ -110,7 +112,7 @@ def schedule_sampling(eta, itr):
 
 
 def train_on_batch(input_tensor, target_tensor, mask, encoder, encoder_optimizer, criterion):
-    mask = torch.FloatTensor(mask).permute(0, 1, 4, 2, 3).contiguous().to(device)
+    mask = torch.FloatTensor(mask).permute(0, 1, 4, 2, 3).contiguous().to('cuda:'+str(args.local_rank))
     encoder_optimizer.zero_grad()
     # input_tensor : torch.Size([batch_size, input_length, 1, 64, 64])
     input_length = input_tensor.size(1)
@@ -118,7 +120,7 @@ def train_on_batch(input_tensor, target_tensor, mask, encoder, encoder_optimizer
     loss = 0.0
     for ei in range(input_length - 1):
         target = input_tensor[:, ei, :, :, :]
-        output_image = encoder(target, (ei == 0))
+        output_image = encoder(target)
         weight  = get_weight_symbol(input_tensor[:, ei + 1, :, :, :])
         # loss += criterion(output_image, input_tensor[:, ei + 1, :, :, :])
         loss += torch.sum(weight*((input_tensor[:, ei + 1, :, :, :] - output_image) ** 2)) + \
@@ -156,18 +158,20 @@ def trainIters(encoder, n_epochs, print_every, eval_every):
             # input_batch =  torch.Size([8, 20, 1, 64, 64])
             # input_tensor = out[1].to(device)
             # target_tensor = out[2].to(device)
-            input_tensor = out[:, 0:10].permute(0, 1, 4, 2, 3).float().to(device)
-            target_tensor = out[:, 10:].permute(0, 1, 4, 2, 3).float().to(device)
+            input_tensor = out[:, 0:10].permute(0, 1, 4, 2, 3).contiguous().float().to('cuda:'+str(args.local_rank))
+            target_tensor = out[:, 10:].permute(0, 1, 4, 2, 3).contiguous().float().to('cuda:'+str(args.local_rank))
             eta, real_input_flag = schedule_sampling(eta, itr)
+          
+            encoder.module.set_initial(args.batch_size,input_tensor.device)
             loss = train_on_batch(input_tensor, target_tensor, real_input_flag, encoder, encoder_optimizer, criterion)
             loss_epoch += loss
 
-            if itr % 500 == 0:
+            if itr % 500 == 0 and torch.distributed.get_rank() == 0:
                 print('epoch ', epoch, ' loss ', loss_epoch, ' epoch time ', time.time() - t0)
                 t0 = time.time()
                 loss_epoch = 0
 
-            if itr % 2500 == 0:
+            if itr % 2500 == 0 and  torch.distributed.get_rank() == 0:
                 mse, mae, ssim = evaluate(encoder, test_loader, itr)
                 scheduler_enc.step(mse)
 
@@ -199,21 +203,21 @@ def evaluate(encoder, loader, itr):
             # input_batch = torch.Size([8, 20, 1, 64, 64])
             # input_tensor = out[1].to(device)
             # target_tensor = out[2].to(device)
-            input_tensor = out[:, 0:10].permute(0, 1, 4, 2, 3).float().to(device)
-            target_tensor = out[:, 10:].permute(0, 1, 4, 2, 3).float().to(device)
+            input_tensor = out[:, 0:10].permute(0, 1, 4, 2, 3).contiguous().float().to('cuda:'+str(args.local_rank))
+            target_tensor = out[:, 10:].permute(0, 1, 4, 2, 3).contiguous().float().to('cuda:'+str(args.local_rank))
 
             input_length = input_tensor.size()[1]
             target_length = target_tensor.size()[1]
 
             for ei in range(input_length - 1):
-                output_image = encoder(input_tensor[:, ei, :, :, :], (ei == 0))
+                output_image = encoder(input_tensor[:, ei, :, :, :])
 
             decoder_input = input_tensor[:, -1, :, :, :]  # first decoder input= last image of input sequence
             predictions = []
 
             
             for di in range(target_length):
-                output_image = encoder(decoder_input, False)
+                output_image = encoder(decoder_input)
                 decoder_input = output_image
                 predictions.append(output_image.cpu())
 
@@ -293,12 +297,10 @@ def evaluate(encoder, loader, itr):
 
 
 print('BEGIN TRAIN')
-encoder = EncoderRNN(device)
-encoder.to(device)
+# encoder = EncoderRNN('cuda:0' if torch.cuda.is_available() else 'cpu')
+encoder = EncoderRNN().cuda()
+encoder = DDP(encoder, device_ids=['cuda:'+str(args.local_rank)], output_device='cuda:'+str(args.local_rank))
 
-# try to directly wrap the model with the data_parallel
-if len(devices_list) > 1:
-    encoder = torch.nn.DataParallel(encoder, devices_list).cuda()
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)

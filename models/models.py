@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 
+import sys
 
 
 
@@ -35,7 +36,13 @@ class ConvLSTM_Cell(nn.Module):
 
     # we implement LSTM that process only one timestep
     def forward(self, x, hidden):  # x [batch, hidden_dim, width, height]
+        
         h_cur, c_cur = hidden
+#        print(x.shape,'sdaadas')
+#        print(x.device,'dsadsad')
+#        print(h_cur.shape,'hhhhhhhhhh')
+#        print(h_cur.device,'fffffffffff')
+        
         combined = torch.cat([x, h_cur], dim=1)  # concatenate along channel axis
         combined_conv = self.conv(combined)
         cc_i, cc_f, cc_o, cc_g = torch.split(combined_conv, self.hidden_dim, dim=1)
@@ -50,7 +57,7 @@ class ConvLSTM_Cell(nn.Module):
 
 
 class ConvLSTM(nn.Module):
-    def __init__(self, input_shape, input_dim, hidden_dims, kernel_size, device):
+    def __init__(self, input_shape, input_dim, hidden_dims, kernel_size):
         super(ConvLSTM, self).__init__()
         self.input_shape = input_shape
         self.input_dim = input_dim
@@ -58,7 +65,7 @@ class ConvLSTM(nn.Module):
         self.n_layers = len(hidden_dims)
         self.kernel_size = kernel_size
         self.H, self.C = [], []
-        self.device = device
+
 
         cell_list = []
         for i in range(0, self.n_layers):
@@ -70,11 +77,7 @@ class ConvLSTM(nn.Module):
                                            kernel_size=self.kernel_size))
         self.cell_list = nn.ModuleList(cell_list)
 
-    def forward(self, input_, first_timestep=False):  # input_ [batch_size, 1, channels, width, height]
-        batch_size = input_.data.size()[0]
-        if (first_timestep):
-            self.initHidden(batch_size)  # init Hidden at each forward start
-
+    def forward(self, input_):  # input_ [batch_size, 1, channels, width, height]
         for j, cell in enumerate(self.cell_list):
             if j == 0:  # bottom layer
                 self.H[j], self.C[j] = cell(input_, (self.H[j], self.C[j]))
@@ -84,17 +87,10 @@ class ConvLSTM(nn.Module):
         # return (self.H, self.C), self.H  # (hidden, output)
         return self.H  # (hidden, output)
 
-    def initHidden(self, batch_size):
-        self.H, self.C = [], []
-        for i in range(self.n_layers):
-            self.H.append(
-                torch.zeros(batch_size, self.hidden_dims[i], self.input_shape[0], self.input_shape[1]).to(self.device))
-            self.C.append(
-                torch.zeros(batch_size, self.hidden_dims[i], self.input_shape[0], self.input_shape[1]).to(self.device))
-
     def setHidden(self, hidden):
         H, C = hidden
-        self.H, self.C = H, C
+        self.H, self.C = [H]*self.n_layers, [C
+]*self.n_layers
 
 
 class dcgan_conv(nn.Module):
@@ -130,7 +126,7 @@ class dcgan_upconv(nn.Module):
 
 
 class image_encoder(nn.Module):
-    def __init__(self, nc, device):
+    def __init__(self, nc):
         super(image_encoder, self).__init__()
         nf = 16
         kernel_size = (3, 3)
@@ -142,28 +138,27 @@ class image_encoder(nn.Module):
         self.c5 = dcgan_conv(nf * 4, nf * 8, stride=2)  # (8*nf) x 8 x 8
         self.c6 = dcgan_conv(nf * 8, nf * 16, stride=2)  # (8*nf) x 8 x 8
 
-        self.convlstm_5 = ConvLSTM(input_shape=(56, 56), input_dim=nf * 8, hidden_dims=[nf * 8], kernel_size=kernel_size,
-                                   device=device).to(device)
-        self.convlstm_6 = ConvLSTM(input_shape=(28, 28), input_dim=nf * 16, hidden_dims=[nf * 16], kernel_size=kernel_size,
-                                   device=device).to(device)
+        self.convlstm_5 = ConvLSTM(input_shape=(56, 56), input_dim=nf * 8, hidden_dims=[nf * 8], kernel_size=kernel_size)
+        self.convlstm_6 = ConvLSTM(input_shape=(28, 28), input_dim=nf * 16, hidden_dims=[nf * 16], kernel_size=kernel_size)
 
-    def forward(self, input, first_timestep):
+    def forward(self, input):
         h1 = self.c1(input)
         h2 = self.c2(h1)
         h3 = self.c3(h2)
         h4 = self.c4(h3)
 
         h51 = self.c5(h4)
-        h5 = self.convlstm_5(h51, first_timestep)[-1]  # (nf*16) x 8 x 8
+
+        h5 = self.convlstm_5(h51)[-1]  # (nf*16) x 8 x 8
 
         h61 = self.c6(h5)
-        h6 = self.convlstm_6(h61, first_timestep)[-1]  # (nf*16) x 8 x 8
+        h6 = self.convlstm_6(h61)[-1]  # (nf*16) x 8 x 8
 
         return [h1, h2, h3, h4, h5, h6]
 
 
 class image_decoder(nn.Module):
-    def __init__(self, nc, device):
+    def __init__(self, nc):
         super(image_decoder, self).__init__()
         nf = 16
         kernel_size = (3, 3)
@@ -174,18 +169,17 @@ class image_decoder(nn.Module):
         self.upc5 = dcgan_upconv(nf * 1, nf // 2, stride=2)  # (nf) x 64 x 64
         self.upc6 = nn.ConvTranspose2d(nf // 2, nc, kernel_size=(3, 3), stride=1, padding=1)  # (nc) x 64 x 64
 
-        self.convlstm_5 = ConvLSTM(input_shape=(56, 56), input_dim=nf * 8 * 2, hidden_dims=[nf * 8], kernel_size=kernel_size,
-                                   device=device).to(device)
-        self.convlstm_6 = ConvLSTM(input_shape=(28, 28), input_dim=nf * 16, hidden_dims=[nf * 16], kernel_size=kernel_size,
-                                   device=device).to(device)
+        self.convlstm_5 = ConvLSTM(input_shape=(56, 56), input_dim=nf * 8 * 2, hidden_dims=[nf * 8], kernel_size=kernel_size)
+        self.convlstm_6 = ConvLSTM(input_shape=(28, 28), input_dim=nf * 16, hidden_dims=[nf * 16], kernel_size=kernel_size)
 
-    def forward(self, input, first_timestep):
+    def forward(self, input):
         output, skip = input  # output: (4*nf) x 16 x 16
         output_6, output_5, output_4, output_3 = output
+        
 
-        d1 = self.convlstm_6(torch.cat([output_6], dim=1), first_timestep)[-1]  # (nf*16) x 8 x 8
+        d1 = self.convlstm_6(torch.cat([output_6], dim=1))[-1]  # (nf*16) x 8 x 8
         d21 = self.upc1(d1)                         # (nf*8) x 16 x 16
-        d2 = self.convlstm_5(torch.cat([d21, output_5], dim=1), first_timestep)[-1]  # (nf*8) x 16 x 16
+        d2 = self.convlstm_5(torch.cat([d21, output_5], dim=1))[-1]  # (nf*8) x 16 x 16
         d31 = self.upc2(d2)     # (nf*4) x 32 x 32
         d41 = self.upc3(d31)     # (nf*1) x 64 x 64
         d5 = self.upc4(d41)  # (nf*1) x 64 x 64
@@ -196,26 +190,38 @@ class image_decoder(nn.Module):
 
 
 class EncoderRNN(torch.nn.Module):
-    def __init__(self, device):
+    def __init__(self):
         super(EncoderRNN, self).__init__()
         nf = 16
         kernel_size = (3, 3)
-        self.image_cnn_enc = image_encoder(1, device).to(device)  # image encoder 64x64x1 -> 16x16x64
-        self.image_cnn_dec = image_decoder(1, device).to(device)  # image decoder 16x16x64 -> 64x64x1
+        self.image_cnn_enc = image_encoder(1)  # image encoder 64x64x1 -> 16x16x64
+        self.image_cnn_dec = image_decoder(1)  # image decoder 16x16x64 -> 64x64x1
 
         self.convlstm_5 = ConvLSTM(input_shape=(56, 56), input_dim=nf * 8, hidden_dims=[nf * 8],
-                                   kernel_size=kernel_size, device=device).to(device)
+                                   kernel_size=kernel_size)
         self.convlstm_6 = ConvLSTM(input_shape=(28, 28), input_dim=nf * 16, hidden_dims=[nf * 16],
-                                   kernel_size=kernel_size, device=device).to(device)
+                                   kernel_size=kernel_size)
 
-    def forward(self, input, first_timestep=False):
-        skip = self.image_cnn_enc(input, first_timestep)
+    def set_initial(self,bs, device,):
+        
+        self.convlstm_5.setHidden([torch.zeros([bs,128,56,56]).to(device),torch.zeros([bs,128,56,56]).to(device)])
+        self.convlstm_6.setHidden([torch.zeros([bs,256,28,28]).to(device),torch.zeros([bs,256,28,28]).to(device)])
+        self.image_cnn_enc.convlstm_5.setHidden([torch.zeros([bs,128,56,56]).to(device),torch.zeros([bs,128,56,56]).to(device)])
+        self.image_cnn_enc.convlstm_6.setHidden([torch.zeros([bs,256,28,28]).to(device),torch.zeros([bs,256,28,28]).to(device)])
+        self.image_cnn_dec.convlstm_5.setHidden([torch.zeros([bs,128,56,56]).to(device),torch.zeros([bs,128,56,56]).to(device)])
+        self.image_cnn_dec.convlstm_6.setHidden([torch.zeros([bs,256,28,28]).to(device),torch.zeros([bs,256,28,28]).to(device)])
+        
+        
+
+    def forward(self, input):
+        skip = self.image_cnn_enc(input)
         [h1, h2, h3, h4, h5, h6] = skip
-        output_6 = self.convlstm_6(h6, first_timestep)
-        output_5 = self.convlstm_5(h5, first_timestep)
+        
+        output_6 = self.convlstm_6(h6)
+        output_5 = self.convlstm_5(h5)
 
         output = [output_6[-1], output_5[-1], 0, 0]
 
-        output_image = torch.sigmoid(self.image_cnn_dec([output, skip], first_timestep))
+        output_image = torch.sigmoid(self.image_cnn_dec([output, skip]))
 
         return output_image
