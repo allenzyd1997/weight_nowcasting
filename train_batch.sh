@@ -7,8 +7,10 @@
 #SBATCH --gres gpu:1
 #SBATCH -o log0321.out
 
-nohup CUDA_VISIBLE_DEVICES=2,5,6,7 python -m torch.distributed.launch --nproc_per_node 4  main.py > May19.log 2>&1 &
 
 
-nohup /root/runoob.sh > runoob.log 2>&1 &
-29045
+CUDA_VISIBLE_DEVICES=2,5,6,7 nohup python -m torch.distributed.launch --nproc_per_node 4 --master_port=26500  main.py > May19.log 2>&1 &
+
+
+CUDA_VISIBLE_DEVICES=2,5,6,7 nohup python -m torch.distributed.launch --nproc_per_node 4  main.py > May19.log 2>&1 &
+

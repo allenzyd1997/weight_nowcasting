@@ -1,2 +1,95 @@
-nohup: 忽略输入
-nohup: 无法运行命令'CUDA_VISIBLE_DEVICES=2,5,6,7': 没有那个文件或目录
+BEGIN TRAINBEGIN TRAIN
+
+BEGIN TRAINBEGIN TRAIN
+
+layer  0 input dim  128  hidden dim  128
+layer  0 input dim  128  hidden dim  128
+layer  0 input dim  128  hidden dim  128
+layer  0 input dim  128  hidden dim  128
+layer  0 input dim  256  hidden dim  256
+layer  0 input dim  256  hidden dim  256
+layer  0 input dim  256  hidden dim  layer 256 
+0 input dim  256  hidden dim  256
+layer  0 input dim  256  hidden dim  128
+layer layer   00  input dim input dim   256256   hidden dim  hidden dim   128128
+
+layer  0 input dim  256  hidden dim  128
+layer  0 input dim  256  hidden dim  256
+layer layer   00  input dim input dim   256256   hidden dim  hidden dim   256256
+
+layer  0 input dim  256  hidden dim  256
+layer layer layer   0 0 0 input dim  input dim  input dim   128128128    hidden dim  hidden dim  hidden dim    128128128
+
+
+layer  0 input dim  128  hidden dim  128
+layer layer   00  input dim input dim   256256   hidden dim  hidden dim   256256
+
+layer  0 input dim  256  hidden dim  256
+layer  0 input dim  256  hidden dim  256
+encoder  19077217
+encoder  19077217
+encoder  19077217
+encoder  19077217
+[W reducer.cpp:347] Warning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+grad.sizes() = [8, 1, 3, 3], strides() = [9, 1, 3, 1]
+bucket_view.sizes() = [8, 1, 3, 3], strides() = [9, 9, 3, 1] (function operator())
+[W reducer.cpp:347] Warning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+grad.sizes() = [8, 1, 3, 3], strides() = [9, 1, 3, 1]
+bucket_view.sizes() = [8, 1, 3, 3], strides() = [9, 9, 3, 1] (function operator())
+[W reducer.cpp:347] Warning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+grad.sizes() = [8, 1, 3, 3], strides() = [9, 1, 3, 1]
+bucket_view.sizes() = [8, 1, 3, 3], strides() = [9, 9, 3, 1] (function operator())
+[W reducer.cpp:347] Warning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+grad.sizes() = [8, 1, 3, 3], strides() = [9, 1, 3, 1]
+bucket_view.sizes() = [8, 1, 3, 3], strides() = [9, 9, 3, 1] (function operator())
+epoch  0  loss  171970740.3562502  epoch time  567.5149307250977
+epoch  0  loss  92672991.59375007  epoch time  559.6689078807831
+epoch  0  loss  85749006.01562507  epoch time  565.0769562721252
+epoch  0  loss  82844670.86250001  epoch time  568.4930493831635
+epoch  0  loss  83604616.91249998  epoch time  573.6239769458771
+eval mse  15719.170170898438  eval mae  40244.7941015625  eval ssim  0.8010898061982056  eval bce  138337.6725937501
+epoch  0  loss  78053396.15624996  epoch time  1142.0331056118011
+epoch  0  loss  78649583.38749997  epoch time  578.2692356109619
+epoch  0  loss  76113808.36874996  epoch time  575.2582447528839
+epoch  0  loss  76962785.29999994  epoch time  580.308758020401
+epoch  0  loss  76728021.28749993  epoch time  578.7617247104645
+eval mse  22913.29580078125  eval mae  74316.4832421875  eval ssim  0.6462926709583978  eval bce  148696.25340624992
+epoch  0  loss  71635027.39375004  epoch time  1123.6189813613892
+epoch  0  loss  78460406.76249997  epoch time  581.2139451503754
+epoch  0  loss  73484347.89999996  epoch time  578.7556240558624
+epoch  0  loss  71098363.98124999  epoch time  579.7588627338409
+epoch  0  loss  73479529.94374995  epoch time  576.0726773738861
+eval mse  7964.242612304687  eval mae  36713.687783203124  eval ssim  0.7558884471586629  eval bce  90602.89231249997
+epoch  0  loss  75073612.32500003  epoch time  1090.772188425064
+epoch  0  loss  72641880.6812501  epoch time  572.3831367492676
+epoch  0  loss  77254232.48125  epoch time  571.0285184383392
+epoch  0  loss  76095421.17812505  epoch time  572.5420496463776
+epoch  1  loss  84263781.01250003  epoch time  569.4348363876343
+eval mse  39241.093706054686  eval mae  86425.79783203125  eval ssim  0.6882486967953468  eval bce  212821.54375
+epoch  1  loss  73664317.56875  epoch time  1101.3251266479492
+epoch  1  loss  70837831.28124993  epoch time  575.3689391613007
+epoch  1  loss  74252700.971875  epoch time  570.2491135597229
+epoch  1  loss  79050327.80624995  epoch time  565.1071772575378
+epoch  1  loss  73243962.00625005  epoch time  586.6582641601562
+eval mse  5399.817920532227  eval mae  27597.46872558594  eval ssim  0.801292400897509  eval bce  80413.864890625
+epoch  1  loss  74309956.43125  epoch time  1078.7281458377838
+epoch  1  loss  80196347.21562506  epoch time  554.628579378128
+epoch  1  loss  72596368.77500007  epoch time  561.4659130573273
+epoch  1  loss  71525051.23749995  epoch time  554.2008006572723
+epoch  1  loss  80288011.95624995  epoch time  576.5740456581116
+eval mse  7079.29666015625  eval mae  32624.54669921875  eval ssim  0.763908810909745  eval bce  88618.39734375005
+epoch  1  loss  74317814.39999998  epoch time  1096.3599088191986
+epoch  1  loss  75172052.34999998  epoch time  579.064425945282
+epoch  1  loss  71037498.65625  epoch time  579.3275473117828
+epoch  1  loss  74935836.13750008  epoch time  584.526419878006
+epoch  1  loss  75986514.73124993  epoch time  578.9644269943237
+eval mse  5019.4850091552735  eval mae  21978.228310546874  eval ssim  0.8496161686357895  eval bce  121387.31426562509
+epoch  1  loss  74222321.97499995  epoch time  1085.347130060196
+epoch  1  loss  76296688.65624994  epoch time  579.1787118911743
+epoch  1  loss  74845774.54687506  epoch time  795.8938865661621
+epoch  2  loss  76572980.79374997  epoch time  1000.5698983669281
+epoch  2  loss  81468735.51250008  epoch time  1004.9719707965851
+eval mse  14343.746052246093  eval mae  54580.8691015625  eval ssim  0.7089970464855608  eval bce  110670.55396875007
+epoch  2  loss  72332873.10937504  epoch time  1572.5230474472046
+epoch  2  loss  75022726.18749999  epoch time  1006.3322672843933
+epoch  2  loss  70955249.71562503  epoch time  1000.4251530170441

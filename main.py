@@ -18,7 +18,7 @@ import sys
 from torch.nn.parallel import DistributedDataParallel as DDP
 devices_list = [i for i in range(torch.cuda.device_count())]
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = '2,5,6,7'
+os.environ["CUDA_VISIBLE_DEVICES"] = '2,5,6,7'
 
 
 parser = argparse.ArgumentParser()
